@@ -24,6 +24,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.android.gnd.FakeData;
+import com.google.android.gnd.HiltTestWithRobolectricRunner;
 import com.google.android.gnd.model.AuditInfo;
 import com.google.android.gnd.model.Mutation;
 import com.google.android.gnd.model.Mutation.SyncStatus;
@@ -40,36 +42,43 @@ import com.google.android.gnd.model.form.Form;
 import com.google.android.gnd.model.layer.Layer;
 import com.google.android.gnd.model.layer.Style;
 import com.google.android.gnd.persistence.local.LocalDataStore;
-import com.google.android.gnd.persistence.local.LocalValueStore;
+import com.google.android.gnd.persistence.local.LocalDataStoreModule;
 import com.google.android.gnd.persistence.remote.RemoteDataEvent;
 import com.google.android.gnd.persistence.remote.RemoteDataStore;
+import com.google.android.gnd.persistence.remote.RemoteStorageManager;
+import com.google.android.gnd.persistence.remote.RemoteStorageModule;
 import com.google.android.gnd.persistence.sync.DataSyncWorkManager;
+import com.google.android.gnd.persistence.uuid.FakeUuidGenerator;
 import com.google.android.gnd.persistence.uuid.OfflineUuidGenerator;
 import com.google.android.gnd.system.auth.AuthenticationManager;
+import com.google.android.gnd.system.auth.AuthenticationModule;
+import com.google.android.gnd.system.auth.FakeAuthenticationManager;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import dagger.hilt.android.testing.BindValue;
+import dagger.hilt.android.testing.HiltAndroidTest;
+import dagger.hilt.android.testing.UninstallModules;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import java.util.NoSuchElementException;
-import org.junit.Before;
-import org.junit.Rule;
+import javax.inject.Inject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 // TODO: Include a test for Polygon feature
-@RunWith(PowerMockRunner.class)
-public class FeatureRepositoryTest {
+@HiltAndroidTest
+@UninstallModules({
+  AuthenticationModule.class,
+  LocalDataStoreModule.class,
+  RemoteStorageModule.class
+})
+public class FeatureRepositoryTest extends HiltTestWithRobolectricRunner {
 
-  private static final User TEST_USER =
-      User.builder().setId("user id").setEmail("user@gmail.com").setDisplayName("user 1").build();
+  private static final User TEST_USER = FakeData.TEST_USER;
 
   private static final AuditInfo TEST_AUDIT_INFO = AuditInfo.now(TEST_USER);
 
@@ -117,23 +126,17 @@ public class FeatureRepositoryTest {
           .setLastModified(TEST_AUDIT_INFO)
           .build();
 
-  @Rule public MockitoRule rule = MockitoJUnit.rule();
-
-  @Mock LocalDataStore mockLocalDataStore;
-  @Mock LocalValueStore mockLocalValueStore;
-  @Mock RemoteDataStore mockRemoteDataStore;
-  @Mock ProjectRepository mockProjectRepository;
-  @Mock DataSyncWorkManager mockWorkManager;
-  @Mock AuthenticationManager mockAuthManager;
-  @Mock OfflineUuidGenerator mockUuidGenerator;
+  @BindValue @Mock DataSyncWorkManager mockWorkManager;
+  @BindValue @Mock LocalDataStore mockLocalDataStore;
+  @BindValue @Mock ProjectRepository mockProjectRepository;
+  @BindValue @Mock RemoteDataStore mockRemoteDataStore;
+  @BindValue @Mock RemoteStorageManager mockRemoteStorageManager;
+  @BindValue AuthenticationManager fakeAuthManager = new FakeAuthenticationManager(TEST_USER);
+  @BindValue OfflineUuidGenerator fakeUuidGenerator = new FakeUuidGenerator("new_uuid");
 
   @Captor ArgumentCaptor<FeatureMutation> captorFeatureMutation;
 
-  private FeatureRepository featureRepository;
-
-  private void mockAuthUser() {
-    doReturn(TEST_USER).when(mockAuthManager).getCurrentUser();
-  }
+  @Inject FeatureRepository featureRepository;
 
   private void mockApplyAndEnqueue() {
     doReturn(Completable.complete())
@@ -148,19 +151,6 @@ public class FeatureRepositoryTest {
   private void mockRemoteFeatureStream(RemoteDataEvent<Feature> event) {
     when(mockRemoteDataStore.loadFeaturesOnceAndStreamChanges(TEST_PROJECT))
         .thenReturn(Flowable.just(event));
-  }
-
-  @Before
-  public void setUp() {
-    featureRepository =
-        new FeatureRepository(
-            mockLocalDataStore,
-            mockLocalValueStore,
-            mockRemoteDataStore,
-            mockProjectRepository,
-            mockWorkManager,
-            mockAuthManager,
-            mockUuidGenerator);
   }
 
   @Test
@@ -295,10 +285,7 @@ public class FeatureRepositoryTest {
   }
 
   @Test
-  public void testNewFeature() throws Exception {
-    mockAuthUser();
-    when(mockUuidGenerator.generateUuid()).thenReturn("new_uuid");
-
+  public void testNewFeature() {
     FeatureMutation newMutation =
         featureRepository.newMutation("foo_project_id", "foo_layer_id", TEST_POINT);
 

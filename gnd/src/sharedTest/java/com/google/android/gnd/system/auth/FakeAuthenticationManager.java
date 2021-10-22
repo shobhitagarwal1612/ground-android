@@ -29,7 +29,7 @@ public class FakeAuthenticationManager implements AuthenticationManager {
   @Hot(replays = true)
   public Subject<SignInState> behaviourSubject = BehaviorSubject.create();
 
-  public static final User TEST_USER =
+  private User user =
       User.builder()
           .setDisplayName("Test User")
           .setEmail("test@user.com")
@@ -39,6 +39,10 @@ public class FakeAuthenticationManager implements AuthenticationManager {
   @Inject
   public FakeAuthenticationManager() {}
 
+  public FakeAuthenticationManager(User user) {
+    this.user = user;
+  }
+
   @Override
   public Observable<SignInState> getSignInState() {
     return behaviourSubject;
@@ -46,17 +50,17 @@ public class FakeAuthenticationManager implements AuthenticationManager {
 
   @Override
   public User getCurrentUser() {
-    return TEST_USER;
+    return user;
   }
 
   @Override
   public void init() {
-    behaviourSubject.onNext(new SignInState(TEST_USER));
+    behaviourSubject.onNext(new SignInState(user));
   }
 
   @Override
   public void signIn() {
-    behaviourSubject.onNext(new SignInState(TEST_USER));
+    behaviourSubject.onNext(new SignInState(user));
   }
 
   @Override

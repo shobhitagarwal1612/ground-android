@@ -20,12 +20,17 @@ import javax.inject.Inject;
 
 public class FakeUuidGenerator implements OfflineUuidGenerator {
 
+  private String uuid = "TEST UUID";
+
   @Inject
-  FakeUuidGenerator() {
+  FakeUuidGenerator() {}
+
+  public FakeUuidGenerator(String uuid) {
+    this.uuid = uuid;
   }
 
   @Override
   public String generateUuid() {
-    return "TEST UUID";
+    return uuid;
   }
 }

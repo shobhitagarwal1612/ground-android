@@ -23,7 +23,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import com.google.android.gnd.model.AuditInfo;
 import com.google.android.gnd.model.Mutation;
@@ -53,7 +52,6 @@ import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
-import java.util.Date;
 import java.util.NoSuchElementException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -64,12 +62,10 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 // TODO: Include a test for Polygon feature
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(FeatureRepository.class) // Needed for mocking "new Date()"
 public class FeatureRepositoryTest {
 
   private static final User TEST_USER =
@@ -120,8 +116,6 @@ public class FeatureRepositoryTest {
           .setCreated(TEST_AUDIT_INFO)
           .setLastModified(TEST_AUDIT_INFO)
           .build();
-
-  private static final Date FAKE_NOW = new Date();
 
   @Rule public MockitoRule rule = MockitoJUnit.rule();
 
@@ -304,7 +298,6 @@ public class FeatureRepositoryTest {
   public void testNewFeature() throws Exception {
     mockAuthUser();
     when(mockUuidGenerator.generateUuid()).thenReturn("new_uuid");
-    whenNew(Date.class).withNoArguments().thenReturn(FAKE_NOW);
 
     FeatureMutation newMutation =
         featureRepository.newMutation("foo_project_id", "foo_layer_id", TEST_POINT);
@@ -315,6 +308,6 @@ public class FeatureRepositoryTest {
     assertThat(newMutation.getLayerId()).isEqualTo("foo_layer_id");
     assertThat(newMutation.getNewLocation().get()).isEqualTo(TEST_POINT);
     assertThat(newMutation.getUserId()).isEqualTo(TEST_USER.getId());
-    assertThat(newMutation.getClientTimestamp()).isEqualTo(FAKE_NOW);
+    assertThat(newMutation.getClientTimestamp()).isNotNull();
   }
 }

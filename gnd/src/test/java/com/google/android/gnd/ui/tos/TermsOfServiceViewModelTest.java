@@ -16,31 +16,25 @@
 
 package com.google.android.gnd.ui.tos;
 
+import com.google.android.gnd.HiltTestWithRobolectricRunner;
 import com.google.android.gnd.repository.TermsOfServiceRepository;
 import com.google.android.gnd.ui.common.Navigator;
 import com.google.android.gnd.ui.home.HomeScreenFragmentDirections;
 import com.google.common.truth.Truth;
-import org.junit.Before;
-import org.junit.Rule;
+import dagger.hilt.android.testing.BindValue;
+import dagger.hilt.android.testing.HiltAndroidTest;
+import javax.inject.Inject;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
-public class TermsOfServiceViewModelTest {
+@HiltAndroidTest
+public class TermsOfServiceViewModelTest extends HiltTestWithRobolectricRunner {
 
-  @Rule public MockitoRule rule = MockitoJUnit.rule();
+  @BindValue @Mock Navigator mockNavigator;
+  @BindValue @Mock TermsOfServiceRepository mockRepository;
 
-  @Mock Navigator mockNavigator;
-  @Mock TermsOfServiceRepository mockRepository;
-
-  private TermsOfServiceViewModel viewModel;
-
-  @Before
-  public void before() {
-    viewModel = new TermsOfServiceViewModel(mockNavigator, mockRepository);
-  }
+  @Inject TermsOfServiceViewModel viewModel;
 
   @Test
   public void testOnButtonClicked() {

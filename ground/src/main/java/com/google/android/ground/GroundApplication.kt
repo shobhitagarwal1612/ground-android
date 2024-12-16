@@ -32,6 +32,7 @@ class GroundApplication : MultiDexApplication(), Configuration.Provider {
   @Inject lateinit var crashReportingTree: CrashReportingTree
   @Inject lateinit var workerFactory: HiltWorkerFactory
 
+  // TODO: Test comment 2
   override val workManagerConfiguration: Configuration
     get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
 

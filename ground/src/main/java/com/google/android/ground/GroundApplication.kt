@@ -37,9 +37,9 @@ class GroundApplication : MultiDexApplication(), Configuration.Provider {
 
   override fun onCreate() {
     super.onCreate()
+    // TODO: Test comment
     Timber.plant(if (isReleaseBuild()) crashReportingTree else Timber.DebugTree())
     if (!isReleaseBuild()) {
-      // TODO: Test comment
       Timber.d("DEBUG build config active; enabling debug tooling")
 
       // Log failures when trying to do work in the UI thread.
